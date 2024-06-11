@@ -1,3 +1,7 @@
+from typing import Optional
+from promotions import Promotion
+
+
 class Product:
     """Represents a product in the store."""
 
@@ -19,6 +23,7 @@ class Product:
         self.price = price
         self.quantity = quantity
         self.active = True
+        self.promotion: Optional[Promotion] = None
 
     def get_quantity(self) -> int:
         """Returns the quantity of the product."""
@@ -52,9 +57,18 @@ class Product:
         """Deactivates the product."""
         self.active = False
 
+    def set_promotion(self, promotion: Promotion):
+        """Sets a promotion for the product."""
+        self.promotion = promotion
+
+    def get_promotion(self) -> Optional[Promotion]:
+        """Returns the current promotion for the product."""
+        return self.promotion
+
     def show(self) -> str:
         """Returns a string representation of the product."""
-        return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}"
+        promotion_info = f", Promotion: {self.promotion.name}" if self.promotion else ""
+        return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}{promotion_info}"
 
     def buy(self, quantity: int) -> float:
         """
@@ -76,20 +90,60 @@ class Product:
         self.quantity -= quantity
         if self.quantity == 0:
             self.deactivate()
+        if self.promotion:
+            return self.promotion.apply_promotion(self, quantity)
         return self.price * quantity
 
 
-# Example usage
-if __name__ == "__main__":
-    bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
-    mac = Product("MacBook Air M2", price=1450, quantity=100)
+class NonStockedProduct(Product):
+    """Represents a non-stocked product in the store."""
 
-    print(bose.buy(50))
-    print(mac.buy(100))
-    print(mac.is_active())
+    def __init__(self, name: str, price: float):
+        super().__init__(name, price, quantity=0)
+        self.active = True  # NonStockedProducts are always active
 
-    print(bose.show())
-    print(mac.show())
+    def set_quantity(self, quantity: int):
+        pass  # Quantity is always zero for non-stocked products
 
-    bose.set_quantity(1000)
-    print(bose.show())
+    def buy(self, quantity: int) -> float:
+        if quantity <= 0:
+            raise ValueError("Quantity must be greater than zero")
+        if self.promotion:
+            return self.promotion.apply_promotion(self, quantity)
+        return self.price * quantity
+
+    def show(self) -> str:
+        promotion_info = f", Promotion: {self.promotion.name}" if self.promotion else ""
+        return (
+            f"{self.name}, Price: {self.price}, Quantity: Not applicable (Non-stocked product)"
+            f"{promotion_info}"
+        )
+
+
+class LimitedProduct(Product):
+    """Represents a limited product in the store."""
+
+    def __init__(self, name: str, price: float, quantity: int, maximum: int):
+        super().__init__(name, price, quantity)
+        self.maximum = maximum
+
+    def buy(self, quantity: int) -> float:
+        if quantity <= 0:
+            raise ValueError("Quantity must be greater than zero")
+        if quantity > self.maximum:
+            raise ValueError(f"Cannot buy more than {self.maximum} of this product in one order")
+        if quantity > self.quantity:
+            raise ValueError("Not enough quantity in stock")
+        self.quantity -= quantity
+        if self.quantity == 0:
+            self.deactivate()
+        if self.promotion:
+            return self.promotion.apply_promotion(self, quantity)
+        return self.price * quantity
+
+    def show(self) -> str:
+        promotion_info = f", Promotion: {self.promotion.name}" if self.promotion else ""
+        return (
+            f"{self.name}, Price: {self.price}, Quantity: {self.quantity}, Max per order: {self.maximum}"
+            f"{promotion_info}"
+        )
