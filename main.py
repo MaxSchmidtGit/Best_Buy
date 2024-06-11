@@ -11,6 +11,12 @@ best_buy = store.Store(product_list)
 
 
 def start(store):
+    """
+    Starts the store management system and displays the menu.
+
+    Args:
+        store (Store): The store object to manage.
+    """
     while True:
         print("\n1. List all products in store")
         print("2. Show total amount in store")
@@ -32,6 +38,12 @@ def start(store):
 
 
 def list_products(store):
+    """
+    Lists all products in the store.
+
+    Args:
+        store (Store): The store object to list products from.
+    """
     products = store.get_all_products()
     print("\nProducts in store:")
     for product in products:
@@ -39,11 +51,23 @@ def list_products(store):
 
 
 def show_total_amount(store):
+    """
+    Shows the total amount of all products in the store.
+
+    Args:
+        store (Store): The store object to get the total amount from.
+    """
     total_quantity = store.get_total_quantity()
     print(f"\nTotal amount in store: {total_quantity}")
 
 
 def make_order(store):
+    """
+    Makes an order by allowing the user to select products and quantities.
+
+    Args:
+        store (Store): The store object to order products from.
+    """
     products = store.get_all_products()
     print("\nProducts available for order:")
     for idx, product in enumerate(products, start=1):
@@ -70,8 +94,8 @@ def make_order(store):
         try:
             total_cost = store.order(order)
             print(f"Order placed successfully. Total cost: ${total_cost}")
-        except Exception as e:
-            print(f"Error placing order: {e}")
+        except ValueError as error:
+            print(f"Error placing order: {error}")
 
 
 if __name__ == "__main__":
